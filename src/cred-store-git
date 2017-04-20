@@ -1,0 +1,26 @@
+#!/usr/bin/ruby -W
+
+# Usage: git config --global credential.helper ~/projects/cred-store/src/cred-store-git
+
+unless ARGV.empty? or ARGV.first == 'get'
+    $stderr.puts "Invalid argument, only 'get' is valid: " + ARGV.first,
+        $stdin.read.inspect
+    exit 1
+end
+
+$LOAD_PATH.unshift File.expand_path File.dirname __FILE__
+
+require 'lib/cred-store'
+
+cs = CredStore.new
+
+req = $stdin.readlines.map { |l| l.chomp.split '=', 2 }.to_h
+key = ( req['protocol'] || 'http' ) + '://' + req['host'] + '/'
+
+cred = cs[key]
+if cred.nil?
+    $stderr.puts "cred-store: No entry for #{key} found."
+    exit 1
+end
+
+$stdout.puts 'username=' + cred['username'], 'password=' + cred['password']

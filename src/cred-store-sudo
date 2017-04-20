@@ -1,0 +1,23 @@
+#!/usr/bin/ruby -W
+
+# Usage: SUDO_ASKPASS=~/projects/cred-store/src/cred-store-sudo sudo -A
+
+$LOAD_PATH.unshift File.expand_path File.dirname __FILE__
+
+require 'lib/cred-store.rb'
+
+unless ARGV.first =~ /^\[sudo\] .+ (\S+): $/
+    $stderr.puts "Unexpected sudo prompt: " + ARGV.first
+    exit 1
+end
+
+key = $1 + '@' + `hostname`.chop
+
+cs = CredStore.new
+cred = cs[key]
+if cred.nil?
+    $stderr.puts "cred-store: No entry for #{key} found."
+    exit 1
+end
+
+$stdout.puts cred['password']
